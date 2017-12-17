@@ -21,8 +21,10 @@ public class InvestorsDataCrawler {
 			
 			return investorsData;
 		} catch (Exception e) {
-			System.err.println(ticker);
-			e.printStackTrace();
+			if (!ifInvestorsError(url)) {
+				System.err.println(ticker);
+				e.printStackTrace();
+			}
 			return null;
 		}
 	}
@@ -107,5 +109,14 @@ public class InvestorsDataCrawler {
 			}
 		}
 		return document;
+	}
+	
+	private boolean ifInvestorsError(String url) {
+		try {
+			Document document = getDocument(url);
+			return "Error".equalsIgnoreCase(document.select(".dots").get(0).text());
+		} catch (Exception e) {
+			return false;
+		}
 	}
 }
