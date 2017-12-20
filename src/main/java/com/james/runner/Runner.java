@@ -67,6 +67,7 @@ public class Runner {
 				}
 
 				private Runnable init(String stock, String date, String output, String url) {
+					System.err.print(stock + " ");
 					this.stock = stock;
 					this.date = date;
 					this.output = output;
