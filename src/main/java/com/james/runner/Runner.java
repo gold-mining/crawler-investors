@@ -44,6 +44,7 @@ public class Runner {
 	
 	public void getDataMultiThread(String threadNumber, String stockList,  String date, String output) throws Exception {
 		Queue<String> queue = getStockListFromFile(stockList);
+		Queue<String> finished = new LinkedList<String>();
 		
 		URLCrawler urlCrawler = new URLCrawler();
 		Map<String, String> urlMap= urlCrawler.getQuoteResults(new LinkedList<String>(queue));
@@ -60,21 +61,25 @@ public class Runner {
 				String url;
 				String date;
 				String output;
+				Queue<String> finished;
 				public void run() {
 					InvestorsDataCrawler dataCrawler = new InvestorsDataCrawler();
 					InvestorsData data = dataCrawler.getInvestorsData(stock, url);
 					OutputDAO.outputToFile(data, output + "/" + date, stock);
+					finished.offer(stock);
+					System.err.print(finished.size() + " ");
 				}
 
-				private Runnable init(String stock, String date, String output, String url) {
+				private Runnable init(String stock, String date, String output, String url, Queue<String> finished) {
 					System.err.print(stock + " ");
 					this.stock = stock;
 					this.date = date;
 					this.output = output;
 					this.url = url;
+					this.finished = finished;
 					return this;
 				}
-			}.init(ticker, date, output, urlMap.get(ticker)));
+			}.init(ticker, date, output, urlMap.get(ticker), finished));
 		
 		}
 
