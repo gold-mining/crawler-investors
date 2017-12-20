@@ -22,7 +22,7 @@ public class InvestorsDataCrawler {
 			return investorsData;
 		} catch (Exception e) {
 			if (!ifInvestorsError(url)) {
-				System.out.println(this.ticker);
+				System.out.println(ticker);
 				System.out.println(e.toString());
 			}
 			return null;
