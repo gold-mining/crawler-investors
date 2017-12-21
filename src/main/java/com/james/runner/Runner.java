@@ -30,8 +30,8 @@ public class Runner {
 		Runner runner = new Runner();
 		
 		switch (input.get("mode")) {
-			case "single-thread": runner.getInvestorsData(input.get("stock-list"), input.get("date"), input.get("output")); break;
-			case "multithread": runner.getInvestorsData(input.get("stock-list"), input.get("date"), input.get("output"), input.get("thread")); break;
+			case "single-thread": runner.getInvestorsData(input.get("stock-list"), input.get("output")); break;
+			case "multithread": runner.getInvestorsData(input.get("stock-list"), input.get("output"), input.get("thread")); break;
 			default: break;
 		}
 
@@ -40,7 +40,7 @@ public class Runner {
 
 	}
 	
-	public void getInvestorsData(String stockList, String date, String output) throws Exception {
+	public void getInvestorsData(String stockList, String output) throws Exception {
 		Queue<String> queue = FileUtil.getStockListFromFile(stockList);
 		
 		URLCrawler urlCrawler = new URLCrawler();
@@ -48,12 +48,12 @@ public class Runner {
 		
 		while (!queue.isEmpty()) {
 			String ticker  = queue.poll();
-			InvestorsRunner runner = new InvestorsRunner(ticker, date, output, urlMap.get(ticker));
+			InvestorsRunner runner = new InvestorsRunner(ticker, output, urlMap.get(ticker));
 			runner.run();
 		}
 	}
 	
-	public void getInvestorsData(String stockList,  String date, String output, String threadNumber) throws Exception {
+	public void getInvestorsData(String stockList, String output, String threadNumber) throws Exception {
 		Queue<String> queue = FileUtil.getStockListFromFile(stockList);
 		
 		URLCrawler urlCrawler = new URLCrawler();
@@ -63,7 +63,7 @@ public class Runner {
 
 		while (!queue.isEmpty()) {
 			String ticker  = queue.poll();
-			executor.execute(new InvestorsRunner(ticker, date, output, urlMap.get(ticker)));
+			executor.execute(new InvestorsRunner(ticker, output, urlMap.get(ticker)));
 		}
 
 		executor.shutdown();
@@ -76,9 +76,9 @@ public class Runner {
 		private String finalPath;
 		private String url;
 		
-		public InvestorsRunner(String ticker, String date, String output, String url) {
+		public InvestorsRunner(String ticker, String output, String url) {
 			this.ticker = ticker;
-			this.finalPath = output + "/" + date;
+			this.finalPath = output;
 			this.url = url;
 		}
 		
