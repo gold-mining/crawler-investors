@@ -15,6 +15,7 @@ public class InvestorsDataCrawler {
 			InvestorsData investorsData = new InvestorsData();
 			Document document = getDocument(url);
 			
+			investorsData.ticker = ticker;
 			getOverViewInfo(document, investorsData);
 			getScoreInfo(document, investorsData);
 			getStockData(document, investorsData);
@@ -29,7 +30,7 @@ public class InvestorsDataCrawler {
 		}
 	}
 
-	private void getOverViewInfo(Document document, InvestorsData investorsData) {		
+	private void getOverViewInfo(Document document, InvestorsData investorsData) {
 		investorsData.Price = document.select("#lstPrice").get(0).text();
 		investorsData.PriceChange = document.select("#qtPrcChg").get(0).text();
 		investorsData.PriceChangePercentage = document.select("#qtPrcPctChg").get(0).text();
@@ -94,21 +95,17 @@ public class InvestorsDataCrawler {
 		investorsData.IndustryGroupRank = Xsoup.compile("ul/li[2]").evaluate(companyData.get(13)).getElements().get(0).text();
 	}
 	
-	private Document getDocument(String url) {
-		Document document = null;
+	private Document getDocument(String url) throws Exception {
 		int retry = 5;
-		boolean doesRetry = true;
 		
-		while(retry != 0 && doesRetry) {
-			doesRetry = false;
-			try {
-				document = Jsoup.connect(url).get();
-			} catch (Exception e) {
-				doesRetry = true;
-				retry--;
-			}
+		while(true) {
+		    try {
+		    		Document document = Jsoup.connect(url).get();
+				return document;
+		    } catch (Exception e) {
+		        if (retry-- == 0) throw e;
+		    }
 		}
-		return document;
 	}
 	
 	private boolean ifInvestorsError(String url) {

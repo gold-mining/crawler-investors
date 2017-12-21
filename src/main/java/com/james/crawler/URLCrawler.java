@@ -3,6 +3,7 @@ package com.james.crawler;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -23,29 +24,12 @@ public class URLCrawler {
 
 	public Map<String, String> getQuoteResults(Queue<String> tickers) throws InterruptedException {
 		Map<String, String> tickerUrlMap = new ConcurrentHashMap<String, String>();
+		Queue<String> queue = new LinkedList<String>(tickers);
 
 		ExecutorService executor = Executors.newFixedThreadPool(10);
 
-		while (!tickers.isEmpty()) {
-			executor.execute(new Runnable() {
-				String stock;
-				Map<String, String> tickerUrlMap;
-
-				public void run() {
-					try {
-						String url = getQuoteResult(stock);
-						tickerUrlMap.put(stock, url);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-
-				private Runnable init(String stock, Map<String, String> tickerUrlMap) {
-					this.stock = stock;
-					this.tickerUrlMap = tickerUrlMap;
-					return this;
-				}
-			}.init(tickers.poll(), tickerUrlMap));
+		while (!queue.isEmpty()) {
+			executor.execute(new Runner(tickerUrlMap, queue.poll()));
 		}
 
 		executor.shutdown();
@@ -55,18 +39,16 @@ public class URLCrawler {
 	}
 
 	public String getQuoteResult(String ticker) throws Exception {
-		int retry = 5;
 		
-		while (retry != 0) {
+		for(int i = 0; i < 5; i++) {
 			String url = "https://research.investors.com/services/AutoSuggest.asmx/GetQuoteResults";
 	
 			HttpClient client = HttpClientBuilder.create().build();
 			HttpPost post = new HttpPost(url);
 	
 			List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-			urlParameters.add(new BasicNameValuePair("q", ticker.replace(".", "")));
+			urlParameters.add(new BasicNameValuePair("q", ticker.replace(".", "").replace("-", "")));
 			urlParameters.add(new BasicNameValuePair("limit", "1"));
-	
 			post.setEntity(new UrlEncodedFormEntity(urlParameters));
 	
 			HttpResponse response = client.execute(post);
@@ -79,9 +61,31 @@ public class URLCrawler {
 					return line.trim().replace("<Url>", "").replace("</Url>", "");
 				}
 			}
-			retry--;
 		}
 
 		throw new Exception(ticker + " not found");
+	}
+
+	class Runner implements Runnable {
+		
+		private String ticker;
+		private Map<String, String> map;
+		
+		public Runner( Map<String, String> map, String ticker) {
+			this.map = map;
+			this.ticker = ticker;
+		}
+
+		@Override
+		public void run() {
+			try {
+				String url = getQuoteResult(ticker);
+				map.put(ticker, url);
+			} catch (Exception e) {
+				System.out.println("cannot find url for " + ticker);
+				System.out.println(e.toString());
+			}
+		}
+		
 	}
 }
